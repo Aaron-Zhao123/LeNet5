@@ -74,8 +74,7 @@ def conv_network(x, weights, biases):
         [-1, pool_shape[1]*pool_shape[2]*pool_shape[3]])
     hidden = tf.nn.relu(tf.matmul(reshape, weights['fc1']) + biases['fc1'])
     output = tf.nn.softmax(tf.matmul(hidden, weights['fc2']) + biases['fc2'])
-    return output
-
+    return output, reshape
 def main():
     mnist = input_data.read_data_sets("MNIST.data/", one_hot = True)
     # tf Graph input
@@ -84,14 +83,14 @@ def main():
 
     x_image = tf.reshape(x,[-1,28,28,1])
     # Construct model
-    pred = conv_network(x_image, weights, biases)
+    pred, pool = conv_network(x_image, weights, biases)
 
     # Define loss and optimizer
 
     with tf.name_scope('cross_entropy'):
 
-	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, pred))
-        #cost = tf.reduce_mean(-tf.reduce_sum(y * tf.log(pred), reduction_indices=[1]))
+    	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
+        # cost = tf.reduce_mean(-tf.reduce_sum(y * tf.log(pred), reduction_indices=[1]))
         tf.scalar_summary('cross entropy', cost)
 
     correct_prediction = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
@@ -127,13 +126,15 @@ def main():
                 batch_x, batch_y = mnist.train.next_batch(batch_size)
                 # Run optimization op (backprop) and cost op (to get loss value)
                 _, c = sess.run([optimizer, cost], feed_dict={x: batch_x,y: batch_y})
+                pred_val = pred.eval(feed_dict={x:batch_x, y: batch_y})
+                # print (pred_val)
                 training_cnt = training_cnt + 1
                 train_accuracy = accuracy.eval(feed_dict={x:batch_x, y: batch_y})
+                print (c)
                 with open('log/data.txt',"a") as output_file:
             		output_file.write("{},{},{}\n".format(training_cnt,train_accuracy, c))
                 # Compute average loss
                 avg_cost += c / total_batch
-		print (c)
             # Display logs per epoch step
             if epoch % display_step == 0:
 		saver.save(sess, "tmp/model.ckpt")
