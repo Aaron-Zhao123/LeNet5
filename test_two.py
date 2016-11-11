@@ -89,7 +89,9 @@ def main():
     # Define loss and optimizer
 
     with tf.name_scope('cross_entropy'):
-        cost = tf.reduce_mean(-tf.reduce_sum(y * tf.log(pred), reduction_indices=[1]))
+
+	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, pred))
+        #cost = tf.reduce_mean(-tf.reduce_sum(y * tf.log(pred), reduction_indices=[1]))
         tf.scalar_summary('cross entropy', cost)
 
     correct_prediction = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
@@ -122,7 +124,6 @@ def main():
             total_batch = int(mnist.train.num_examples/batch_size)
             # Loop over all batches
             for i in range(total_batch):
-                print ('hi')
                 batch_x, batch_y = mnist.train.next_batch(batch_size)
                 # Run optimization op (backprop) and cost op (to get loss value)
                 _, c = sess.run([optimizer, cost], feed_dict={x: batch_x,y: batch_y})
@@ -132,6 +133,7 @@ def main():
             		output_file.write("{},{},{}\n".format(training_cnt,train_accuracy, c))
                 # Compute average loss
                 avg_cost += c / total_batch
+		print (c)
             # Display logs per epoch step
             if epoch % display_step == 0:
 		saver.save(sess, "tmp/model.ckpt")
