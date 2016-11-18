@@ -73,8 +73,8 @@ def conv_network(x, weights, biases):
         pool,
         [-1, pool_shape[1]*pool_shape[2]*pool_shape[3]])
     hidden = tf.nn.relu(tf.matmul(reshape, weights['fc1']) + biases['fc1'])
-    output = tf.nn.softmax(tf.matmul(hidden, weights['fc2']) + biases['fc2'])
-    return output, reshape
+    output = tf.matmul(hidden, weights['fc2']) + biases['fc2']
+    return output , reshape
 def main():
     mnist = input_data.read_data_sets("MNIST.data/", one_hot = True)
     # tf Graph input
@@ -90,7 +90,7 @@ def main():
     with tf.name_scope('cross_entropy'):
 
     	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
-        # cost = tf.reduce_mean(-tf.reduce_sum(y * tf.log(pred), reduction_indices=[1]))
+       # cost = tf.reduce_mean(-tf.reduce_sum(y * tf.log(pred), reduction_indices=[1]))
         tf.scalar_summary('cross entropy', cost)
 
     correct_prediction = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
