@@ -13,13 +13,17 @@ import input_data
 import os.path
 import tensorflow as tf
 
+
 # Parameters
 learning_rate = 0.001
 training_epochs = 10000
 batch_size = 100
 display_step = 1
-
 # Network Parameters
+IMAGE_SIZE = 28
+NUM_CHANNELS = 1
+NUM_LABELS = 10
+
 n_hidden_1 = 300# 1st layer number of features
 n_hidden_2 = 100# 2nd layer number of features
 n_input = 784 # MNIST data input (img shape: 28*28)
@@ -28,36 +32,58 @@ n_classes = 10 # MNIST total classes (0-9 digits)
 
 # Store layers weight & bias
 weights = {
-    'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-    'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-    'out': tf.Variable(tf.random_normal([n_hidden_2, n_classes]))
+    'cov1': tf.Variable(tf.truncated_normal([5, 5, NUM_CHANNELS, 32], stddev=0.1)),
+    'cov2': tf.Variable(tf.truncated_normal([5, 5, 32, 64], stddev=0.1)),
+    'fc1': tf.Variable(tf.random_normal([IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 64, 512])),
+    'fc2': tf.Variable(tf.random_normal([512, NUM_LABELS]))
 }
 biases = {
-    'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'b2': tf.Variable(tf.random_normal([n_hidden_2])),
-    'out': tf.Variable(tf.random_normal([n_classes]))
+    'cov1': tf.Variable(tf.random_normal([32])),
+    'cov2': tf.Variable(tf.random_normal([64])),
+    'fc1': tf.Variable(tf.random_normal([512])),
+    'fc2': tf.Variable(tf.random_normal([10]))
 }
 
 # Create model
-def multilayer_perceptron(x, weights, biases):
-    # Hidden layer with RELU activation
-    layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.nn.relu(layer_1)
-    # Hidden layer with RELU activation
-    layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
-    # Output layer with linear activation
-    out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
-    return out_layer
+def conv_network(x, weights, biases):
+    conv = tf.nn.conv2d(x,
+                        weights['cov1'],
+                        strides = [1,1,1,1],
+                        padding = 'SAME')
+    relu = tf.nn.relu(tf.nn.bias_add(conv, biases['cov1']))
+    pool = tf.nn.max_pool(
+            relu,
+            ksize = [1 ,2 ,2 ,1],
+            strides = [1, 2, 2, 1],
+            padding = 'SAME')
 
+    conv = tf.nn.conv2d(pool,
+                        weights['cov2'],
+                        strides = [1,1,1,1],
+                        padding = 'SAME')
+    relu = tf.nn.relu(tf.nn.bias_add(conv, biases['cov2']))
+    pool = tf.nn.max_pool(
+            relu,
+            ksize = [1 ,2 ,2 ,1],
+            strides = [1, 2, 2, 1],
+            padding = 'SAME')
+    '''get pool shape'''
+    pool_shape = pool.get_shape().as_list()
+    reshape = tf.reshape(
+        pool,
+        [-1, pool_shape[1]*pool_shape[2]*pool_shape[3]])
+    hidden = tf.nn.relu(tf.matmul(reshape, weights['fc1']) + biases['fc1'])
+    output = tf.matmul(hidden, weights['fc2']) + biases['fc2']
+    return output
 def main():
     mnist = input_data.read_data_sets("MNIST.data/", one_hot = True)
     # tf Graph input
     x = tf.placeholder("float", [None, n_input])
     y = tf.placeholder("float", [None, n_classes])
+    x_image = tf.reshape(x,[-1,28,28,1])
 
     # Construct model
-    pred = multilayer_perceptron(x, weights, biases)
+    pred= conv_network(x_image, weights, biases)
 
     # Define loss and optimizer
 
