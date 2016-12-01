@@ -12,6 +12,9 @@ from __future__ import print_function
 import input_data
 import os.path
 import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 
 # Parameters
@@ -75,6 +78,56 @@ def conv_network(x, weights, biases):
     hidden = tf.nn.relu(tf.matmul(reshape, weights['fc1']) + biases['fc1'])
     output = tf.matmul(hidden, weights['fc2']) + biases['fc2']
     return output
+def plot_weights():
+        weights_cov1 = weights['cov1'].eval().flatten()
+        weights_cov2 = weights['cov2'].eval().flatten()
+        weights_fc1 = weights['fc1'].eval().flatten()
+        weights_fc2 = weights['fc2'].eval().flatten()
+        plt.figure(1)
+        plt.subplot(411)
+        plt.hist(weights_cov1, bins = 20)
+        plt.title('cov1')
+        plt.subplot(412)
+        plt.hist(weights_cov2, bins = 20)
+        plt.title('cov2')
+        plt.subplot(413)
+        plt.hist(weights_fc1, bins = 20)
+        plt.title('fc1')
+        plt.subplot(414)
+        plt.hist(weights_fc2, bins = 20)
+        plt.title('fc2')
+        plt.show()
+
+def plot_biases():
+        biases_cov1 = biases['cov1'].eval().flatten()
+        biases_cov2 = biases['cov2'].eval().flatten()
+        biases_fc1 = biases['fc1'].eval().flatten()
+        biases_fc2 = biases['fc2'].eval().flatten()
+        plt.figure(2)
+        plt.subplot(411)
+        plt.hist(biases_cov1, bins = 20)
+        plt.title('cov1')
+        plt.subplot(412)
+        plt.hist(biases_cov2, bins = 20)
+        plt.title('cov2')
+        plt.subplot(413)
+        plt.hist(biases_fc1, bins = 20)
+        plt.title('fc1')
+        plt.subplot(414)
+        plt.hist(biases_fc2, bins = 20)
+        plt.title('fc2')
+        plt.show()
+def plot_training_data():
+    raw_data = np.loadtxt('log/data.txt', delimiter = ',')
+    plt.subplot(211)
+    plt.plot(raw_data[:,0],raw_data[:,1],'b')
+    plt.title('training accuracy')
+    plt.subplot(212)
+    plt.plot(raw_data[:,0],raw_data[:,2],'r')
+    plt.title('cross entropy')
+    plt.show()
+
+#def plot_biases():
 def main():
     mnist = input_data.read_data_sets("MNIST.data/", one_hot = True)
     # tf Graph input
@@ -113,9 +166,17 @@ def main():
             saver.restore(sess, "tmp/model.ckpt")
             print ("model found and restored")
         # Test model
-        correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
         # Calculate accuracy
+        '''accuracy testing
+        correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
         print("Accuracy:", accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
+        '''
+        '''histogram plots
+        plot_weights()
+        plot_biases()
+        '''
+        plot_training_data()
+
 if __name__ == '__main__':
     main()
