@@ -1,11 +1,3 @@
-'''
-A Multilayer Perceptron implementation example using TensorFlow library.
-This example is using the MNIST database of handwritten digits
-(http://yann.lecun.com/exdb/mnist/)
-Author: Aymeric Damien
-Project: https://github.com/aymericdamien/TensorFlow-Examples/
-'''
-
 from __future__ import print_function
 
 # Import MNIST data
@@ -79,53 +71,51 @@ def conv_network(x, weights, biases):
     output = tf.matmul(hidden, weights['fc2']) + biases['fc2']
     return output
 def plot_weights():
+        fig, axrr = plt.subplots( 4, sharex = True )  # create figure & 1 axis
         weights_cov1 = weights['cov1'].eval().flatten()
         weights_cov2 = weights['cov2'].eval().flatten()
         weights_fc1 = weights['fc1'].eval().flatten()
         weights_fc2 = weights['fc2'].eval().flatten()
-        plt.figure(1)
-        plt.subplot(411)
-        plt.hist(weights_cov1, bins = 20)
-        plt.title('cov1')
-        plt.subplot(412)
-        plt.hist(weights_cov2, bins = 20)
-        plt.title('cov2')
-        plt.subplot(413)
-        plt.hist(weights_fc1, bins = 20)
-        plt.title('fc1')
-        plt.subplot(414)
-        plt.hist(weights_fc2, bins = 20)
-        plt.title('fc2')
-        plt.show()
+        weights_cov1 = weights['cov1'].eval().flatten()
+        weights_cov2 = weights['cov2'].eval().flatten()
+        weights_fc1 = weights['fc1'].eval().flatten()
+        weights_fc2 = weights['fc2'].eval().flatten()
+        axrr[0].hist(weights_cov1, bins = 20)
+        axrr[0].set_title('cov1')
+        axrr[1].hist(weights_cov2, bins = 20)
+        axrr[1].set_title('cov2')
+        axrr[2].hist(weights_fc1, bins = 20)
+        axrr[2].set_title('fc1')
+        axrr[3].hist(weights_fc2, bins = 20)
+        axrr[3].set_title('fc2')
+        fig.savefig('fig/weights info')
+        plt.close(fig)
 
 def plot_biases():
+        fig, axrr = plt.subplots( 4, sharex = True )  # create figure & 1 axis
         biases_cov1 = biases['cov1'].eval().flatten()
         biases_cov2 = biases['cov2'].eval().flatten()
         biases_fc1 = biases['fc1'].eval().flatten()
         biases_fc2 = biases['fc2'].eval().flatten()
-        plt.figure(2)
-        plt.subplot(411)
-        plt.hist(biases_cov1, bins = 20)
-        plt.title('cov1')
-        plt.subplot(412)
-        plt.hist(biases_cov2, bins = 20)
-        plt.title('cov2')
-        plt.subplot(413)
-        plt.hist(biases_fc1, bins = 20)
-        plt.title('fc1')
-        plt.subplot(414)
-        plt.hist(biases_fc2, bins = 20)
-        plt.title('fc2')
-        plt.show()
+        axrr[0].hist(biases_cov1, bins = 20)
+        axrr[0].set_title('cov1')
+        axrr[1].hist(biases_cov2, bins = 20)
+        axrr[1].set_title('cov2')
+        axrr[2].hist(biases_fc1, bins = 20)
+        axrr[2].set_title('fc1')
+        axrr[3].hist(biases_fc2, bins = 20)
+        axrr[3].set_title('fc2')
+        fig.savefig('fig/biases info')
+        plt.close(fig)
 def plot_training_data():
     raw_data = np.loadtxt('log/data.txt', delimiter = ',')
-    plt.subplot(211)
-    plt.plot(raw_data[:,0],raw_data[:,1],'b')
-    plt.title('training accuracy')
-    plt.subplot(212)
-    plt.plot(raw_data[:,0],raw_data[:,2],'r')
-    plt.title('cross entropy')
-    plt.show()
+    fig, axrr = plt.subplots( 2, sharex = True )  # create figure & 1 axis
+    axrr[0].plot(raw_data[:,0],raw_data[:,1],'b')
+    axrr[0].set_title('training accuracy')
+    axrr[1].plot(raw_data[:,0],raw_data[:,2],'r')
+    axrr[1].set_title('cross entropy')
+    fig.savefig('fig/train info')
+    plt.close(fig)
 
 #def plot_biases():
 def main():
@@ -168,15 +158,16 @@ def main():
         # Test model
         # Calculate accuracy
         '''accuracy testing
+        '''
         correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
         print("Accuracy:", accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
-        '''
+
         '''histogram plots
-        plot_weights()
-        plot_biases()
         '''
-        plot_training_data()
+        #plot_weights()
+        #plot_biases()
+        #plot_training_data()
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,60 @@
+print_function	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^from __future__ import print_function$/;"	namespace	line:1
+input_data	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^import input_data$/;"	namespace	line:4
+os	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^import os.path$/;"	namespace	line:5
+path	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^import os.path$/;"	namespace	line:5
+tf	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^import tensorflow as tf$/;"	namespace	line:6
+np	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^import numpy as np$/;"	namespace	line:7
+matplotlib	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^import matplotlib.pyplot as plt$/;"	namespace	line:8
+plt	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^import matplotlib.pyplot as plt$/;"	namespace	line:8
+learning_rate	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^learning_rate = 0.001$/;"	variable	line:11
+training_epochs	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^training_epochs = 10000$/;"	variable	line:12
+batch_size	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^batch_size = 100$/;"	variable	line:13
+display_step	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^display_step = 1$/;"	variable	line:14
+IMAGE_SIZE	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^IMAGE_SIZE = 28$/;"	variable	line:17
+NUM_CHANNELS	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^NUM_CHANNELS = 1$/;"	variable	line:18
+NUM_LABELS	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^NUM_LABELS = 10$/;"	variable	line:19
+n_hidden_1	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^n_hidden_1 = 300# 1st layer number of features$/;"	variable	line:21
+n_hidden_2	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^n_hidden_2 = 100# 2nd layer number of features$/;"	variable	line:22
+n_input	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^n_input = 784 # MNIST data input (img shape: 28*28)$/;"	variable	line:23
+n_classes	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^n_classes = 10 # MNIST total classes (0-9 digits)$/;"	variable	line:24
+prune_threshold	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^prune_threshold = 0.1$/;"	variable	line:27
+weights	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^weights = {$/;"	variable	line:31
+biases	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^biases = {$/;"	variable	line:37
+weights_mask	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^weights_mask = {$/;"	variable	line:44
+conv_network	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^def conv_network(x, weights, biases):$/;"	function	line:52
+calculate_non_zero_weights	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^def calculate_non_zero_weights(key, weight):$/;"	function	line:87
+prune_weights	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^def prune_weights(sess):$/;"	function	line:90
+plot_weights	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^def plot_weights(weight, name):$/;"	function	line:104
+test	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^def test():$/;"	function	line:112
+main	/Users/aaron/Projects/Mphil_project/LeNet5/test_two.py	/^def main():$/;"	function	line:152
+print_function	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^from __future__ import print_function$/;"	namespace	line:1
+input_data	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^import input_data$/;"	namespace	line:4
+os	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^import os.path$/;"	namespace	line:5
+path	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^import os.path$/;"	namespace	line:5
+tf	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^import tensorflow as tf$/;"	namespace	line:6
+np	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^import numpy as np$/;"	namespace	line:7
+matplotlib	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^import matplotlib.pyplot as plt$/;"	namespace	line:8
+plt	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^import matplotlib.pyplot as plt$/;"	namespace	line:8
+learning_rate	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^learning_rate = 0.001$/;"	variable	line:11
+training_epochs	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^training_epochs = 10000$/;"	variable	line:12
+batch_size	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^batch_size = 100$/;"	variable	line:13
+display_step	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^display_step = 1$/;"	variable	line:14
+IMAGE_SIZE	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^IMAGE_SIZE = 28$/;"	variable	line:17
+NUM_CHANNELS	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^NUM_CHANNELS = 1$/;"	variable	line:18
+NUM_LABELS	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^NUM_LABELS = 10$/;"	variable	line:19
+n_hidden_1	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^n_hidden_1 = 300# 1st layer number of features$/;"	variable	line:21
+n_hidden_2	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^n_hidden_2 = 100# 2nd layer number of features$/;"	variable	line:22
+n_input	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^n_input = 784 # MNIST data input (img shape: 28*28)$/;"	variable	line:23
+n_classes	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^n_classes = 10 # MNIST total classes (0-9 digits)$/;"	variable	line:24
+prune_threshold	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^prune_threshold = 0.1$/;"	variable	line:27
+ENABLE_PRUNING	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^ENABLE_PRUNING = 0$/;"	variable	line:28
+weights	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^weights = {$/;"	variable	line:32
+biases	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^biases = {$/;"	variable	line:38
+weights_mask	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^weights_mask = {$/;"	variable	line:45
+conv_network	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^def conv_network(x, weights, biases):$/;"	function	line:53
+calculate_non_zero_weights	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^def calculate_non_zero_weights(key, weight):$/;"	function	line:88
+prune_weights	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^def prune_weights(sess):$/;"	function	line:91
+mask_gradients	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^def mask_gradients(grads):$/;"	function	line:102
+plot_weights	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^def plot_weights(weight, name):$/;"	function	line:115
+test	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^def test():$/;"	function	line:123
+main	/Users/aaron/Projects/Mphil_project/LeNet5/training_with_pruning.py	/^def main():$/;"	function	line:168
