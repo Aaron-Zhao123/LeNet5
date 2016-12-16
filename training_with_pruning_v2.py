@@ -215,7 +215,7 @@ def main():
     # I need to fetch this value
     variables = [weights['cov1'], weights['cov2'], weights['fc1'], weights['fc2'],
                 biases['cov1'], biases['cov2'], biases['fc1'], biases['fc2']]
-    org_grads = trainer.compute_gradients(cost, var_list = variables, gate_gradients = trainer.GATE_GRAPH)
+    org_grads = trainer.compute_gradients(cost, var_list = variables, gate_gradients = trainer.GATE_OP)
     org_grads = [(ClipIfNotNone(grad), var) for grad, var in org_grads]
 
     grad_placeholder = []

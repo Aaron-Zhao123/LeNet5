@@ -119,7 +119,7 @@ def prune_weights(sess, pruning_cnt):
         sess.run(weights[key].assign(prunned_weight))
         sess.run(weights_mask[key].assign(mask))
         calculate_non_zero_weights(key+' post prune' + str(pruning_cnt), weights[key].eval(sess))
-        calculate_non_zero_weights(key+' post prune, mask' + str(pruning_cnt), weights_mask[key].eval(sess))
+        # calculate_non_zero_weights(key+' post prune, mask' + str(pruning_cnt), weights_mask[key].eval(sess))
 def mask_weights(sess):
     keys = ['cov1','cov2','fc1','fc2']
     for key in keys:
@@ -139,6 +139,7 @@ def mask_gradients(grads_and_names, masks_and_names):
         grad = np.array(grad)
         for mask, mask_name in masks_and_names:
             if (mask_name == var_name):
+                # print("found a match, name:{}".format(mask_name))
                 # print ('shape of grad is {}'.format(np.shape(grad)))
                 mask = np.array(mask)
                 # print ('shape of mask is {}'.format(np.shape(mask)))
@@ -276,6 +277,7 @@ def main():
 
                 feed_dict = {}
                 for i, grad_var in enumerate(org_grads):
+                    # calculate_non_zero_weights('newgrad'+str(i), new_grads[i])
                     feed_dict[grad_placeholder[i][0]] = new_grads[i]
                     # print ('inspect newgrad[{}]: {}'.format(i,np.shape(new_grads[i])))
                     # if (i == 0):
@@ -285,6 +287,7 @@ def main():
 
                 train_step.run(feed_dict = feed_dict)
                 mask_weights(sess)
+                calculate_non_zero_weights('weights cov 1'+str(i), weights['cov1'].eval())
 
                 c = sess.run(cost,  feed_dict={
                         x: batch_x,
@@ -310,14 +313,14 @@ def main():
                 # # print((mask != 0).sum())
                 # # print((mask_in_grad!= 0).sum())
                 #
-                with open('log/data1215.txt',"a") as output_file:
+                with open('log/data1216.txt',"a") as output_file:
             		output_file.write("{},{},{}\n".format(training_cnt,train_accuracy, c))
                 # Compute average loss
                 avg_cost += c / total_batch
             # Display logs per epoch step
             print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
             if epoch % display_step == 0:
-        		saver.save(sess, "tmp_20161214/prunned_model.ckpt")
+        		saver.save(sess, "tmp_20161216/prunned_model.ckpt")
         print("Optimization Finished!")
 
         # Test model
