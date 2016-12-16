@@ -287,12 +287,12 @@ def main():
 
                 train_step.run(feed_dict = feed_dict)
                 mask_weights(sess)
-                calculate_non_zero_weights('weights cov 1'+str(i), weights['cov1'].eval())
+                # calculate_non_zero_weights('weights cov 1'+str(i), weights['cov1'].eval())
 
                 c = sess.run(cost,  feed_dict={
                         x: batch_x,
                         y: batch_y})
-                wcov1 = weights['cov1'].eval()
+                # wcov1 = weights['cov1'].eval()
                 # print ('trainng weights cov1: {}'.format((wcov1 != 0).sum()))
                 training_cnt = training_cnt + 1
                 #
@@ -307,6 +307,7 @@ def main():
                 # pred_val = pred.eval(feed_dict={x:batch_x, y: batch_y})
                 #
                 train_accuracy = accuracy.eval(feed_dict={x:batch_x, y: batch_y})
+                print ("training count is {}".format(training_cnt))
                 print (c)
                 print (train_accuracy)
                 # # mask = weights_mask['cov1'].eval(sess)
