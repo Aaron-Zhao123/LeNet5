@@ -212,7 +212,7 @@ def main():
         tf.scalar_summary('accuracy', accuracy)
 
     merged = tf.merge_all_summaries()
-    saver = tf.train.Saver()
+    # saver = tf.train.Saver()
 
     trainer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     # I need to fetch this value
@@ -320,10 +320,12 @@ def main():
             		output_file.write("{},{},{}\n".format(training_cnt,train_accuracy, c))
                 # Compute average loss
                 avg_cost += c / total_batch
+                save_to_file()
             # Display logs per epoch step
             print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
             if epoch % display_step == 0:
-        		saver.save(sess, "tmp_20161216/prunned_model.ckpt")
+                save_to_file()
+        		# saver.save(sess, "tmp_20161216/prunned_model.ckpt")
         print("Optimization Finished!")
 
         # Test model
@@ -331,6 +333,27 @@ def main():
         # Calculate accuracy
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
         print("Accuracy:", accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
+
+def save_to_file():
+    w_cov1 = weights['cov1'].eval()
+    w_cov2 = weights['cov2'].eval()
+    w_fc1 = weights['fc1'].eval()
+    w_fc2 = weights['fc2'].eval()
+    b_cov1 = biases['cov1'].eval()
+    b_cov2 = biases['cov2'].eval()
+    b_fc1 = biases['fc1'].eval()
+    b_fc2 = biases['fc2'].eval()
+    with file('model_info.npz', 'w') as outputfile:
+        np.savez(
+            outputfile,
+            w_cov1 = w_cov1,
+            w_cov2 = w_cov2,
+            w_fc1 = w_fc1,
+            w_fc2 = w_fc2,
+            b_cov1 = b_cov2,
+            b_fc1 = b_fc1,
+            b_fc2 = b_fc2)
+        print('saved model')
 
 def write_numpy_to_file(data, file_name):
     # Write the array to disk
