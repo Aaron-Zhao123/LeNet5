@@ -260,8 +260,9 @@ def main(argv = None):
             # retain the masks on the weights
             for key in keys:
                 sess.run(weights[key].assign(weights[key].eval()*weights_mask[key]))
-            print('Before training....')
+            # print('Before training....')
             prune_info(weights,0)
+            plot_weights(sess, 'before training'+ str(pruning_number))
             # Training cycle
             training_cnt = 0
             pruning_cnt = 0
@@ -287,9 +288,11 @@ def main(argv = None):
                     training_cnt = training_cnt + 1
                     accuracy_list = np.concatenate((np.array([train_accuracy]),accuracy_list[0:9]))
                     accuracy_mean = np.mean(accuracy_list)
+                    # if (training_cnt == 10):
                     if (accuracy_mean > 0.9):
+                        print('Training ends')
                         saver.save(sess, "tmp_20160118/model")
-                        plot_weights(sess, 'pre pruning'+ str(pruning_number))
+                        plot_weights(sess, 'after pruning'+ str(pruning_number))
                         print("saving model ...")
                         threshold = {
                             'cov1' : 0.08,
@@ -298,7 +301,8 @@ def main(argv = None):
                             'fc2' : 1
                         }
                         prune_weights(sess, threshold, weights, weights_mask)
-                        mask_info(weights_mask)
+                        # mask_info(weights_mask)
+                        sys.exit()
 
 
 
