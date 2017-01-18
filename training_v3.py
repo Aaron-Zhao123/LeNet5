@@ -284,7 +284,7 @@ def main(argv = None):
                             y: batch_y})
                     # print('after apply gradients:')
                     # prune_info(weights,1)
-                    # weights_info(training_cnt, c, train_accuracy)
+                    weights_info(training_cnt, c, train_accuracy)
                     training_cnt = training_cnt + 1
                     accuracy_list = np.concatenate((np.array([train_accuracy]),accuracy_list[0:9]))
                     accuracy_mean = np.mean(accuracy_list)
