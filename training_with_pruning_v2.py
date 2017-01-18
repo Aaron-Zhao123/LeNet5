@@ -5,6 +5,8 @@ import input_data
 import os.path
 import tensorflow as tf
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pickle
@@ -32,7 +34,7 @@ pruning Parameters
 prune_threshold_cov = 0.08
 prune_threshold_fc = 1
 # Frequency in terms of number of training iterations
-prune_freq = 4
+prune_freq = 100
 ENABLE_PRUNING = 0
 
 
@@ -51,19 +53,19 @@ biases = {
 }
 
 #store the masks
-# weights_mask = {
-#     'cov1': tf.Variable(tf.ones([5, 5, NUM_CHANNELS, 32]), trainable = False),
-#     'cov2': tf.Variable(tf.ones([5, 5, 32, 64]), trainable = False),
-#     'fc1': tf.Variable(tf.ones([IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 64, 512]), trainable = False),
-#     'fc2': tf.Variable(tf.ones([512, NUM_LABELS]), trainable = False)
-# }
-
 weights_mask = {
-    'cov1': np.ones([5, 5, NUM_CHANNELS, 32]),
-    'cov2': np.ones([5, 5, 32, 64]),
-    'fc1': np.ones([IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 64, 512]),
-    'fc2': np.ones([512, NUM_LABELS])
+    'cov1': tf.Variable(tf.ones([5, 5, NUM_CHANNELS, 32]), trainable = False),
+    'cov2': tf.Variable(tf.ones([5, 5, 32, 64]), trainable = False),
+    'fc1': tf.Variable(tf.ones([IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 64, 512]), trainable = False),
+    'fc2': tf.Variable(tf.ones([512, NUM_LABELS]), trainable = False)
 }
+
+# weights_mask = {
+#     'cov1': np.ones([5, 5, NUM_CHANNELS, 32]),
+#     'cov2': np.ones([5, 5, 32, 64]),
+#     'fc1': np.ones([IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 64, 512]),
+#     'fc2': np.ones([512, NUM_LABELS])
+# }
 # Create model
 def conv_network(x, weights, biases):
     conv = tf.nn.conv2d(x,
@@ -96,37 +98,43 @@ def conv_network(x, weights, biases):
     output = tf.matmul(hidden, weights['fc2']) + biases['fc2']
     return output , reshape
 
-def calculate_non_zero_weights(key, weight):
+def calculate_non_zero_weights(weight):
     count = (weight != 0).sum()
     size = len(weight.flatten())
-    print("{}, total elements are {} and nonzeros are {}".format(key,size,count))
+    return (count,size)
 
 '''
 Prune weights, weights that has absolute value lower than the
 threshold is set to 0
 '''
-def prune_weights(sess, pruning_cnt):
+# def prune_weights(sess, pruning_cnt):
+#     keys = ['cov1','cov2','fc1','fc2']
+#     for key in keys:
+#         weight = weights[key].eval(sess)
+#         calculate_non_zero_weights(key+' pre prune', weight)
+#         ''' pruning thresholds for cov layer is different from fc layers'''
+#         if (key == 'cov1' or key == 'cov2'):
+#             mask = abs(weight) > prune_threshold_cov
+#         elif (key == 'fc1' or key == 'fc2'):
+#             mask = abs(weight) > prune_threshold_fc
+#         prunned_weight = weight * mask
+#         sess.run(weights[key].assign(prunned_weight))
+#         sess.run(weights_mask[key].assign(mask))
+#         # weights_mask[key] = mask
+#         calculate_non_zero_weights(key+' post prune' + str(pruning_cnt), weights[key].eval(sess))
+def prune_weights(sess, prune_ops):
+    for ops in prune_ops:
+        sess.run(ops)
+    print( 'pruning weights ...')
+
+def mask_weights():
+    mask_ops = []
     keys = ['cov1','cov2','fc1','fc2']
     for key in keys:
-        weight = weights[key].eval(sess)
-        calculate_non_zero_weights(key+' pre prune', weight)
-        ''' pruning thresholds for cov layer is different from fc layers'''
-        if (key == 'cov1' or key == 'cov2'):
-            mask = abs(weight) > prune_threshold_cov
-        elif (key == 'fc1' or key == 'fc2'):
-            mask = abs(weight) > prune_threshold_fc
-        prunned_weight = weight * mask
-        sess.run(weights[key].assign(prunned_weight))
-        # sess.run(weights_mask[key].assign(mask))
-        weights_mask[key] = mask
-        calculate_non_zero_weights(key+' post prune' + str(pruning_cnt), weights[key].eval(sess))
-def mask_weights(sess):
-    keys = ['cov1','cov2','fc1','fc2']
-    for key in keys:
-        weight = weights[key].eval(sess)
+        weight = weights[key]
         mask = weights_mask[key]
-        prunned_weight = weight * mask
-        sess.run(weights[key].assign(prunned_weight))
+        mask_ops.append(weights[key].assign(tf.multiply(weight,mask)))
+    return mask_ops
 '''
 mask gradients, for weights that are pruned, stop its backprop
 '''
@@ -137,18 +145,23 @@ def mask_gradients(grads_and_names):
         # flag set if found a match
         flag = 0
         index = 0
-        grad = np.array(grad)
+        # print(var_name)
+        # print(weights['cov1'].name)
         for key in keys:
-            if (weights[key].name == var_name):
+            if (weights[key]== var_name):
+                print('hi match')
+                print(key, weights[key].name, var_name)
                 # print ('shape of grad is {}'.format(np.shape(grad)))
                 # print ('shape of mask is {}'.format(np.shape(mask)))
-                new_grads.append(grad*weights_mask[key])
+                mask = weights_mask[key]
+                new_grads.append((tf.multiply(mask,grad),var_name))
                 # print ('shape of grad* mask is {}'.format(np.shape(grad * mask)))
                 flag = 1
         # if flag is not set
         if (flag == 0):
-            new_grads.append(grad)
+            new_grads.append((grad,var_name))
     return new_grads
+
 '''
 plot weights and store the fig
 '''
@@ -216,29 +229,57 @@ def main():
     variables = [weights['cov1'], weights['cov2'], weights['fc1'], weights['fc2'],
                 biases['cov1'], biases['cov2'], biases['fc1'], biases['fc2']]
     org_grads = trainer.compute_gradients(cost, var_list = variables, gate_gradients = trainer.GATE_OP)
-    org_grads = [(ClipIfNotNone(grad), var) for grad, var in org_grads]
 
-    grad_placeholder = []
-    for grad_var in org_grads:
-        grad_placeholder.append((tf.placeholder('float', shape=grad_var[0].get_shape()) ,grad_var[1]))
-    train_step = trainer.apply_gradients(grad_placeholder)
+    org_grads = [(ClipIfNotNone(grad), var) for grad, var in org_grads]
+    new_grads = mask_gradients(org_grads)
+    grad_placeholder = [(tf.placeholder("float", shape=grad[0].get_shape()), grad[1]) for grad in org_grads]
+
+    apply_ph = trainer.apply_gradients(grad_placeholder)
+    train_step = trainer.apply_gradients(new_grads)
+
+    # prune a number of weights
+
+    keys = ['cov1','cov2','fc1','fc2']
+    prune_ops = []
+    for key in keys:
+        weight = weights[key]
+        ''' pruning thresholds for cov layer is different from fc layers'''
+        if (key == 'cov1' or key == 'cov2'):
+            mask = tf.abs(weight) > prune_threshold_cov
+        elif (key == 'fc1' or key == 'fc2'):
+            mask = tf.abs(weight) > prune_threshold_fc
+        mask = tf.to_float(mask)
+        prunned_weight = tf.multiply(weight, mask)
+        prune_ops.append(weights[key].assign(prunned_weight))
+        prune_ops.append(weights_mask[key].assign(mask))
+        # weights_mask[key] = mask
+        # calculate_non_zero_weights(key+' post prune' + str(pruning_cnt), weights[key].eval(sess))
+
+    # mask weights
+    mask_ops = mask_weights()
 
     init = tf.initialize_all_variables()
-
     # Launch the graph
     with tf.Session() as sess:
+
+        # if (os.path.isfile("tmp_20161225/model.meta")):
+        #     new_saver = tf.train.import_meta_graph('tmp_20161225/model.meta')
+        #     new_saver.restore(sess, tf.train.latest_checkpoint('tmp_20161225/'))
+        #     print("found model, restored")
+        #
         sess.run(init)
         # restore model if exists
-        # if (os.path.isfile("tmp/model.ckpt")):
-            # saver.restore(sess, "tmp/model.ckpt")
-            # print ("model found and restored")
 
+        if (os.path.isfile("tmp_20160105/model.meta")):
+            op = tf.train.import_meta_graph("tmp_20160105/model.meta")
+            op.restore(sess,tf.train.latest_checkpoint('tmp_20160105/'))
+            # saver.restore(sess, "tmp_20160105/model.meta")
+            print ("model found and restored")
 
         # Training cycle
         training_cnt = 0
         pruning_cnt = 0
-        from tempfile import TemporaryFile
-        outfile = TemporaryFile()
+        train_accuracy = 0
 
         for epoch in range(training_epochs):
             avg_cost = 0.
@@ -247,79 +288,52 @@ def main():
             for i in range(total_batch):
                 # execute a pruning
                 batch_x, batch_y = mnist.train.next_batch(batch_size)
-                if (training_cnt % prune_freq == 0 and training_cnt != 0):
+
+
+                org_grads_res = sess.run(org_grads, feed_dict={
+                    x: batch_x,
+                    y: batch_y})
+
+                # calculate_non_zero_weights('org grads', org_grads_res[0][0])
+                #
+                new_grads_res = sess.run(new_grads, feed_dict={
+                    x: batch_x,
+                    y: batch_y})
+                # calculate_non_zero_weights('new grads', new_grads_res[0][0])
+                #
+                prune_flag = 0
+                if (train_accuracy > 0.9 and training_cnt % prune_freq == 0 and ENABLE_PRUNING == 1):
                     plot_weights(sess, 'pre pruning'+ str(pruning_cnt))
-                    prune_weights(sess,pruning_cnt)
+                    prune_weights(sess,prune_ops)
                     plot_weights(sess, 'after pruning' + str(pruning_cnt))
                     pruning_cnt = pruning_cnt + 1
-                # evaluate all gradients
-                grads_and_varnames = []
-                for i in range(len(org_grads)):
-                    [g,v] = sess.run([org_grads[i][0], org_grads[i][1]],feed_dict={
+                    prune_flag = 1
+
+                # activate masks
+                for op in mask_ops:
+                    sess.run(op)
+
+                [_, c, train_accuracy] = sess.run([train_step, cost, accuracy], feed_dict = {
                         x: batch_x,
                         y: batch_y})
-                    grads_and_varnames.append((g,org_grads[i][1].name))
-                    # if (i == 0):
-                    #     print ('inspect org grad vars: {}'.format((v !=0).sum()))
-                    #     print ('inspect org grad vars: {}'.format(np.shape(v)))
-                # evaluate the masks
-                # masks_and_names = []
-                # keys = ['cov1','cov2','fc1','fc2']
-                # for key in keys:
-                    # m = sess.run(weights_mask[key], feed_dict = {})
-                    # masks_and_names.append((m,weights[key].name))
-                    # if key == 'cov1':
-                    #     print ('inspect mask: {}'.format((m !=0).sum()))
-                        # inspect_m = m
-                # mask gradients
-                new_grads = mask_gradients(grads_and_varnames)
 
-                feed_dict = {}
-                for i, grad_var in enumerate(org_grads):
-                    feed_dict[grad_placeholder[i][0]] = new_grads[i]
-                    # print ('inspect newgrad[{}]: {}'.format(i,np.shape(new_grads[i])))
-                    # if (i == 0):
-                    #     print ('inspect newgrad[{}]: {}'.format(i,(new_grads[i] != 0).sum()))
-                    # print (np.shape(new_grads[i]))
-                # inspect_grad = np.logical_or(new_grads[0]!=0, inspect_m !=0)
+                # activate masks
+                for op in mask_ops:
+                    sess.run(op)
 
-                wcov1 = weights['cov1'].eval()
-                print ('pre trainng weights cov1: {}'.format((wcov1 != 0).sum()))
-                train_step.run(feed_dict = feed_dict)
-                # mask_weights(sess)
-
-                c = sess.run(cost,  feed_dict={
-                        x: batch_x,
-                        y: batch_y})
-                wcov1 = weights['cov1'].eval()
-                print ('trainng weights cov1: {}'.format((wcov1 != 0).sum()))
+                weights_info(training_cnt, c, train_accuracy, pruning_cnt, prune_flag)
                 training_cnt = training_cnt + 1
-                #
-                #
-                #
-                # c, g2 = sess.run([cost, grads[0][0]], feed_dict={
-                #     x: batch_x,
-                #     y: batch_y})
-                # _, c, g3= sess.run([train_step, cost, grads[0][0]], feed_dict={
-                #     x: batch_x,
-                #     y: batch_y})
-                # pred_val = pred.eval(feed_dict={x:batch_x, y: batch_y})
-                #
-                train_accuracy = accuracy.eval(feed_dict={x:batch_x, y: batch_y})
-                print (c)
-                print (train_accuracy)
-                # # mask = weights_mask['cov1'].eval(sess)
-                # # print((mask != 0).sum())
-                # # print((mask_in_grad!= 0).sum())
-                #
-                with open('log/data1215.txt',"a") as output_file:
+                if (training_cnt % 100 == 0):
+                    saver.save(sess, "tmp_20160105/model")
+                    print("saving model ...")
+                with open('log/data0105.txt',"a") as output_file:
             		output_file.write("{},{},{}\n".format(training_cnt,train_accuracy, c))
                 # Compute average loss
                 avg_cost += c / total_batch
             # Display logs per epoch step
             print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
-            if epoch % display_step == 0:
-        		saver.save(sess, "tmp_20161214/prunned_model.ckpt")
+            # if epoch % display_step == 0:
+        	# 	saver.save(sess, "tmp_20161225/prunned_model.ckpt")
         print("Optimization Finished!")
 
         # Test model
@@ -327,6 +341,24 @@ def main():
         # Calculate accuracy
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
         print("Accuracy:", accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
+
+def weights_info(iter,  c, train_accuracy, prune_cnt, prune_flag):
+    print('This is the {}th iteration, cost is {}, accuracy is {}'.format(
+        iter,
+        c,
+        train_accuracy
+    ))
+
+    if (prune_flag):
+        print('This is the {}th pruning'.format(prune_cnt))
+        (non_zeros, total) = calculate_non_zero_weights(weights['cov1'].eval())
+        print('cov1 has prunned {} percent of its weights'.format((total-non_zeros)*100/total))
+        (non_zeros, total) = calculate_non_zero_weights(weights['cov2'].eval())
+        print('cov2 has prunned {} percent of its weights'.format((total-non_zeros)*100/total))
+        (non_zeros, total) = calculate_non_zero_weights(weights['fc1'].eval())
+        print('fc1 has prunned {} percent of its weights'.format((total-non_zeros)*100/total))
+        (non_zeros, total) = calculate_non_zero_weights(weights['fc2'].eval())
+        print('fc2 has prunned {} percent of its weights'.format((total-non_zeros)*100/total))
 
 def write_numpy_to_file(data, file_name):
     # Write the array to disk

@@ -34,7 +34,7 @@ pruning Parameters
 prune_threshold_cov = 0.08
 prune_threshold_fc = 1
 # Frequency in terms of number of training iterations
-prune_freq = 300
+prune_freq = 700
 ENABLE_PRUNING = 0
 
 
@@ -240,8 +240,6 @@ def main():
         # Training cycle
         training_cnt = 0
         pruning_cnt = 0
-        from tempfile import TemporaryFile
-        outfile = TemporaryFile()
 
         for epoch in range(training_epochs):
             avg_cost = 0.
@@ -320,7 +318,6 @@ def main():
             		output_file.write("{},{},{}\n".format(training_cnt,train_accuracy, c))
                 # Compute average loss
                 avg_cost += c / total_batch
-                save_to_file()
             # Display logs per epoch step
             print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
             if epoch % display_step == 0:

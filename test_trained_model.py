@@ -107,6 +107,7 @@ def plot_biases():
         axrr[3].set_title('fc2')
         fig.savefig('fig/biases info')
         plt.close(fig)
+
 def plot_training_data():
     raw_data = np.loadtxt('log/data.txt', delimiter = ',')
     fig, axrr = plt.subplots( 2, sharex = True )  # create figure & 1 axis
@@ -116,6 +117,12 @@ def plot_training_data():
     axrr[1].set_title('cross entropy')
     fig.savefig('fig/train info')
     plt.close(fig)
+
+
+def calculate_non_zero_weights(weight):
+    count = (weight != 0).sum()
+    size = len(weight.flatten())
+    return (count,size)
 
 #def plot_biases():
 def main():
@@ -152,17 +159,27 @@ def main():
         sess.run(init)
 
         # restore model if exists
-        if (os.path.isfile("tmp/model.ckpt")):
-            saver.restore(sess, "tmp/model.ckpt")
+        if (os.path.isfile("tmp_20160105/model.meta")):
+            op = tf.train.import_meta_graph("tmp_20160105/model.meta")
+            op.restore(sess,tf.train.latest_checkpoint('tmp_20160105/'))
+            # saver.restore(sess, "tmp_20160105/model.meta")
             print ("model found and restored")
+
+        (non_zeros, total) = calculate_non_zero_weights(weights['cov1'].eval())
+        print('cov1 has prunned {} percent of its weights'.format((total-non_zeros)*100/total))
+        (non_zeros, total) = calculate_non_zero_weights(weights['cov2'].eval())
+        print('cov2 has prunned {} percent of its weights'.format((total-non_zeros)*100/total))
+        (non_zeros, total) = calculate_non_zero_weights(weights['fc1'].eval())
+        print('fc1 has prunned {} percent of its weights'.format((total-non_zeros)*100/total))
+        (non_zeros, total) = calculate_non_zero_weights(weights['fc2'].eval())
+        print('fc2 has prunned {} percent of its weights'.format((total-non_zeros)*100/total))
+
         # Test model
         # Calculate accuracy
-        '''accuracy testing
-        '''
-        correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-        print("Accuracy:", accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
-
+        # '''accuracy testing
+        # '''
+        # print("Accuracy:", accuracy.eval({x: mnist.test.images, y: mnist.test.labels}))
+        #
         '''histogram plots
         '''
         #plot_weights()

@@ -1,7 +1,7 @@
-## This is pruning of the Lenet5 Network
+## Pruning of the Lenet5 Network
 
 
-##Tensorflow Installation
+## Tensorflow Installation
 Install tensorflow via virtualev and install matplotlib
 ```
 sudo apt-get install python-pip python-dev python-virtualenv
@@ -11,12 +11,18 @@ export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/cpu/tensorf
 pip install --upgrade $TF_BINARY_URL
 sudo apt-get install python-matplotlib
 ```
-clone the
+clone the following
 ```
 git clone https://github.com/Aaron-Zhao123/LeNet5.git
 ```
 
 ```
-##Reference
+## Reference
 1. https://github.com/garion9013/impl-pruning-TF/blob/master/train.py
-2.
+
+
+
+## Project Log
+
+#### 2016/12/25
+Current Implementation  
