@@ -119,21 +119,16 @@ Prune weights, weights that has absolute value lower than the
 threshold is set to 0
 '''
 
-def prune_weights(sess, threshold, weights, weight_mask):
+def prune_weights(threshold, weights, weight_mask):
     keys = ['cov1','cov2','fc1','fc2']
     for key in keys:
-        weight_mask[key] = np.abs(weights[key].eval(sess)) > threshold[key]
+        weight_mask[key] = np.abs(weights[key].eval()) > threshold[key]
     with open('mask.pkl', 'wb') as f:
         pickle.dump(weight_mask, f)
 
-def mask_weights():
-    mask_ops = []
-    keys = ['cov1','cov2','fc1','fc2']
-    for key in keys:
-        weight = weights[key]
-        mask = weights_mask[key]
-        mask_ops.append(weights[key].assign(tf.multiply(weight,mask)))
-    return mask_ops
+# def quantize_a_value(val):
+#
+#
 '''
 mask gradients, for weights that are pruned, stop its backprop
 '''
@@ -158,18 +153,20 @@ def mask_gradients(grads_and_names, weight_masks):
 '''
 plot weights and store the fig
 '''
-def plot_weights(sess,pruning_info):
+def plot_weights(weights,pruning_info):
         keys = ['cov1','cov2','fc1','fc2']
         fig, axrr = plt.subplots( 2, 2)  # create figure &  axis
         fig_pos = [(0,0), (0,1), (1,0), (1,1)]
         index = 0
         for key in keys:
-            weight = weights[key].eval(sess).flatten()
+            weight = weights[key].eval().flatten()
+            # print (weight)
             size_weight = len(weight)
             weight = weight.reshape(-1,size_weight)[:,0:size_weight]
             x_pos, y_pos = fig_pos[index]
             #take out zeros
             weight = weight[weight != 0]
+            # print (weight)
             hist,bins = np.histogram(weight, bins=100)
             width = 0.7 * (bins[1] - bins[0])
             center = (bins[:-1] + bins[1:]) / 2
@@ -192,11 +189,25 @@ def main(argv = None):
         argv = sys.argv
     try:
         try:
-            opts, args = getopt.getopt(argv[1:],'hp:')
+            opts, args = getopt.getopt(argv[1:],'hp:tc1:tc2:tfc1:tfc2:')
+            threshold = {
+                'cov1' : 0.08,
+                'cov2' : 0.08,
+                'fc1' : 1,
+                'fc2' : 1
+            }
             for opt, val in opts:
                 if (opt == '-p'):
                     pruning_number = val
-                    break
+                if (opt == '-tc1'):
+                    threshold['cov1'] = val
+                if (opt == '-tc2'):
+                    threshold['cov2'] = val
+                if (opt == 'tfc1'):
+                    threshold['fc1'] = val
+                if (opt == 'tfc2'):
+                    threshold['fc2'] = val
+                break
             print('pruning count is {}'.format(pruning_number))
         except getopt.error, msg:
             raise Usage(msg)
@@ -250,24 +261,30 @@ def main(argv = None):
         with tf.Session() as sess:
             sess.run(init)
             # restore model if exists
-            # if (os.path.isfile("tmp_20160118/model.meta")):
-            #     op = tf.train.import_meta_graph("tmp_20160108/model.meta")
-            #     op.restore(sess,tf.train.latest_checkpoint('tmp_20160105/'))
-            #     print ("model found and restored")
+            if (pruning_number != 0 and os.path.isfile("tmp_20160118/model.meta")):
+                op = tf.train.import_meta_graph("tmp_20160118/model.meta")
+                op.restore(sess,tf.train.latest_checkpoint('tmp_20160118/'))
+                print ("model found and restored")
 
+            # print(weights['fc1'].eval())
             keys = ['cov1','cov2','fc1','fc2']
 
             # retain the masks on the weights
+            # print(weights['cov1'].eval().flatten())
             for key in keys:
                 sess.run(weights[key].assign(weights[key].eval()*weights_mask[key]))
+
+            # print(weights_mask['cov1'].flatten())
+            # print(weights['cov1'].eval().flatten())
             # print('Before training....')
-            prune_info(weights,0)
-            plot_weights(sess, 'before training'+ str(pruning_number))
+            prune_info(weights,1)
+            # exit()
+            plot_weights(weights, 'before_training'+ str(pruning_number))
             # Training cycle
             training_cnt = 0
             pruning_cnt = 0
             train_accuracy = 0
-            accuracy_list = np.zeros(10)
+            accuracy_list = np.zeros(20)
 
             print('Training starts ...')
             for epoch in range(training_epochs):
@@ -286,23 +303,23 @@ def main(argv = None):
                     # prune_info(weights,1)
                     weights_info(training_cnt, c, train_accuracy)
                     training_cnt = training_cnt + 1
-                    accuracy_list = np.concatenate((np.array([train_accuracy]),accuracy_list[0:9]))
+                    accuracy_list = np.concatenate((np.array([train_accuracy]),accuracy_list[0:19]))
                     accuracy_mean = np.mean(accuracy_list)
                     # if (training_cnt == 10):
-                    if (accuracy_mean > 0.9):
+                    if (accuracy_mean > 0.99):
                         print('Training ends')
                         saver.save(sess, "tmp_20160118/model")
-                        plot_weights(sess, 'after pruning'+ str(pruning_number))
+                        plot_weights(weights, 'after_training'+ str(pruning_number))
                         print("saving model ...")
-                        threshold = {
-                            'cov1' : 0.08,
-                            'cov2' : 0.08,
-                            'fc1' : 1,
-                            'fc2' : 1
-                        }
-                        prune_weights(sess, threshold, weights, weights_mask)
-                        # mask_info(weights_mask)
-                        sys.exit()
+                        # threshold = {
+                        #     'cov1' : 0.08,
+                        #     'cov2' : 0.08,
+                        #     'fc1' : 1,
+                        #     'fc2' : 1
+                        # }
+                        prune_weights(threshold, weights, weights_mask)
+                        mask_info(weights_mask)
+                        # sys.exit()
 
 
 
